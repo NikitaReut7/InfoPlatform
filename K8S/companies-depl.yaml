@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment  
+metadata:
+  name: companies-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: companyservice
+  template: 
+    metadata:
+      labels:
+        app: companyservice
+    spec: 
+      containers:
+        - name: companyservice
+          image: nikitauljo9/companyservice:latest
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: companies-clusterip-srv
+spec: 
+  type: ClusterIP
+  selector:
+    app: companyservice
+  ports:
+  - name: companyservice
+    protocol: TCP
+    port: 80
+    targetPort: 80

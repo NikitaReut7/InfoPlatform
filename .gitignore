@@ -1,0 +1,8 @@
+/CommandService/bin
+/CommandService/obj
+/CommandService/CommandService.csproj.user
+/PlatformService/bin
+/PlatformService/obj
+/PlatformService/PlatformService.csproj.user
+/.vscode
+/.vs
