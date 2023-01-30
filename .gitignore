@@ -4,5 +4,9 @@
 /PlatformService/bin
 /PlatformService/obj
 /PlatformService/PlatformService.csproj.user
+/CompanyService/bin
+/CompanyService/obj
+/CompanyService/CompanyService.csproj.user
 /.vscode
 /.vs
+/.idea
