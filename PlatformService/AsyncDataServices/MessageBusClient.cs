@@ -7,32 +7,40 @@ using System.Text.Json;
 namespace PlatformService.AsyncDataServices;
 public class MessageBusClient : IMessageBusClient
 {
-    private readonly IConfiguration _configuration;
     private readonly IConnection _connection;
     private readonly IModel _channel;
+    private readonly IGetConnection _getConnection;
+    private readonly string _queueName;
+    private readonly string _routingKey;
+    private readonly IConfiguration _configuration;
 
-    public MessageBusClient(IConfiguration configuration)
+    public MessageBusClient(IGetConnection getConnection, IConfiguration configuration)
     {
+        _getConnection = getConnection;
         _configuration = configuration;
-        var factory = new ConnectionFactory()
-        {
-            HostName = _configuration["RabbitMqHost"],
-            Port = int.Parse(_configuration["RabbitMqPort"])
-        };
 
         try
         {
-            _connection = factory.CreateConnection();
+            _connection = _getConnection.GetRBConnection();
             _channel = _connection.CreateModel();
+            _queueName = _configuration["RabbitMqProducerQueue"];
+            _routingKey = _configuration["RabbitMqPlatformsKey"];
 
-            _channel.ExchangeDeclare(exchange: "trigger", type: ExchangeType.Fanout);
+
+            _channel.QueueDeclare(queue: _queueName,
+                   durable: true,
+                   exclusive: false,
+                   autoDelete: false,
+                   arguments: null);
+
+            _channel.ExchangeDeclare(exchange: "trigger", type: ExchangeType.Direct);
 
             _connection.ConnectionShutdown += RabbitMq_ConnectionShutDown;
 
             Console.WriteLine("--> Connected to MessageBus");
 
         }
-        catch (Exception ex) 
+        catch (Exception ex)
         {
             Console.WriteLine($"Could not connect to the Message Bus {ex.Message}");
         }
@@ -47,7 +55,7 @@ public class MessageBusClient : IMessageBusClient
     {
         var message = JsonSerializer.Serialize(platformPublishedDto);
 
-        if(_connection.IsOpen)
+        if (_connection.IsOpen)
         {
             Console.WriteLine("--> RabbitMq connection open, sending message...");
             SendMessage(message);
@@ -65,7 +73,7 @@ public class MessageBusClient : IMessageBusClient
 
         _channel.BasicPublish(
             exchange: "trigger",
-            routingKey: "",
+            routingKey: _routingKey,
             basicProperties: null,
             body: body);
 

@@ -11,14 +11,20 @@ public class MessageBusSubscriber : BackgroundService
     private readonly IEventProcessor _eventProcessor;
     private IConnection _connection;
     private IModel _channel;
-    private string _queueName;
+    private readonly string _queueName;
+
+    private readonly string _routingKey;
+
+
 
     public MessageBusSubscriber(
-        IConfiguration configuration, 
+        IConfiguration configuration,
         IEventProcessor eventProcessor)
     {
         _configuration = configuration;
         _eventProcessor = eventProcessor;
+        _queueName = _configuration["RabbitMqConsumerQueue"];
+        _routingKey = _configuration["RabbitMqPlatformsKey"];
 
         InitializeRabbitMQ();
     }
@@ -34,16 +40,21 @@ public class MessageBusSubscriber : BackgroundService
         _connection = factory.CreateConnection();
 
         _channel = _connection.CreateModel();
+
+        _channel.QueueDeclare(queue: _queueName,
+               durable: true,
+               exclusive: false,
+               autoDelete: false,
+               arguments: null);
+
         _channel.ExchangeDeclare(
             exchange: "trigger",
-            type: ExchangeType.Fanout);
-
-        _queueName = _channel.QueueDeclare().QueueName;
+            type: ExchangeType.Direct);
 
         _channel.QueueBind(
             queue: _queueName,
             exchange: "trigger",
-            routingKey: "");
+            routingKey: _routingKey);
 
         Console.WriteLine("--> Listening on the Message Bus...");
 
@@ -53,12 +64,12 @@ public class MessageBusSubscriber : BackgroundService
     private void RabbitMQ_ConnectionShutDown(object? sender, ShutdownEventArgs e)
     {
         Console.WriteLine("--> Connection shutdown");
-    
+
     }
 
     public override void Dispose()
     {
-        if(_channel.IsOpen)
+        if (_channel.IsOpen)
         {
             _channel.Close();
             _connection.Close();

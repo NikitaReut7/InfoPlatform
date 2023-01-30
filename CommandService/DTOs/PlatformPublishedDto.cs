@@ -1,4 +1,5 @@
 ﻿namespace CommandService.DTOs;
+
 public class PlatformPublishedDto
 {
     public int Id { get; set; }

@@ -27,14 +27,31 @@ public static class PrepDb
 			}
 		}
 
-		if(!context.Platforms.Any())
+
+
+		if(!context.Companies.Any())
 		{
             Console.WriteLine("--> Seeding Data...");
 
-			context.Platforms.AddRange(
-				new Platform() { Name = "Dot Net", Publisher = "Mucrosoft", Cost = "Free" },
-                new Platform() { Name = "SQL Server", Publisher = "Mucrosoft", Cost = "Free" },
-                new Platform() { Name = "Kubernetes", Publisher = "Cloud Native Computing Foundation", Cost = "Free" }
+            context.Companies.AddRange(
+                new Company()
+                {
+                    Name = "Microsoft",
+					ExternalId = 1
+				},
+                new Company()
+                {
+                    Name = "Google LLS",
+					ExternalId = 2
+				}
+            );
+
+			context.SaveChanges();
+
+            context.Platforms.AddRange(
+				new Platform() { CompanyId = 1, Name = "Dot Net", Cost = "Free" },
+                new Platform() { CompanyId = 1, Name = "SQL Server", Cost = "Free" },
+                new Platform() { CompanyId = 2, Name = "Kubernetes", Cost = "Free" }
             );
 
 			context.SaveChanges();

@@ -10,13 +10,6 @@ spec:
     - host: acme.com
       http: 
         paths:
-          - path: /api/platforms
-            pathType: Prefix
-            backend: 
-              service:
-                name: platforms-clusterip-srv
-                port: 
-                  number: 80
           - path: /api/c/platforms
             pathType: Prefix
             backend: 
@@ -29,5 +22,12 @@ spec:
             backend: 
               service:
                 name: companies-clusterip-srv
+                port: 
+                  number: 80
+          - path: /api/p/companies
+            pathType: Prefix
+            backend: 
+              service:
+                name: platforms-clusterip-srv
                 port: 
                   number: 80

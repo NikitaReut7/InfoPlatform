@@ -1,6 +1,8 @@
+using CommandService.AsyncDataServices;
 using Microsoft.EntityFrameworkCore;
 using PlatformService.AsyncDataServices;
 using PlatformService.Data;
+using PlatformService.EventProcessing;
 using PlatformService.SyncDataServices.Grps;
 using PlatformService.SyncDataServices.Http;
 
@@ -32,9 +34,14 @@ else
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+builder.Services.AddSingleton<IGetConnection, GetConnection>();
 builder.Services.AddScoped<IPlatformRepo, PlatformRepo>();
 builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
 builder.Services.AddSingleton<IMessageBusClient, MessageBusClient>();
+
+builder.Services.AddHostedService<MessageBusSubscriber>();
+builder.Services.AddSingleton<IEventProcessor, EventProcessor>();
+
 builder.Services.AddGrpc();
 
 Console.WriteLine($"--> CommandService Endpoint {builder.Configuration["CommandService"]}");

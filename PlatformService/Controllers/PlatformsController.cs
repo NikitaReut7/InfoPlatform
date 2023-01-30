@@ -5,10 +5,11 @@ using PlatformService.Data;
 using PlatformService.DTOs;
 using PlatformService.Models;
 using PlatformService.SyncDataServices.Http;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace PlatformService.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/p/companies/{companyId}/[controller]")]
 [ApiController]
 public class PlatformsController : ControllerBase
 {
@@ -29,45 +30,66 @@ public class PlatformsController : ControllerBase
         _messageBusClient = messageBusClient;
     }
 
+
+
     [HttpGet]
-    public ActionResult<IEnumerable<PlatformReadDto>> GetPlatforms()
+    public ActionResult<IEnumerable<PlatformReadDto>> GetPlatformsForCompany(int companyId)
     {
-        Console.WriteLine("--> Getting Platforms...");
+        Console.WriteLine($"--> Hit GetPlatformsForCompany:{companyId}");
 
-        var platforms = _repository.GetPlatforms();
-
-        return Ok(_mapper.Map<IEnumerable<PlatformReadDto>>(platforms));
-    }
-
-    [HttpGet("{id}", Name = "GetPlatformById")]
-    public ActionResult<PlatformReadDto> GetPlatformById(int id)
-    {
-        Console.WriteLine("--> Getting Platform by id...");
-
-        var platform = _repository.GetPlatformById(id);
-
-        if (platform != null)
+        if (!_repository.CompanyExist(companyId))
         {
-            return Ok(_mapper.Map<PlatformReadDto>(platform));
+            return NotFound();
         }
 
-        return NotFound();
+        var platforms = _repository.GetPlatformsForCompany(companyId);
+
+        var platformsReadDtos = _mapper.Map<IEnumerable<PlatformReadDto>>(platforms);
+
+        return Ok(platformsReadDtos);
+    }
+
+    [HttpGet("{platformId}", Name = "GetPlatformForCompany")]
+    public ActionResult<PlatformReadDto> GetPlatformForCompany(int companyId, int platformId)
+    {
+        Console.WriteLine($"--> Hit GetPlatformForCompany: {companyId} / {platformId}");
+
+        if (!_repository.CompanyExist(companyId))
+        {
+            return NotFound();
+        }
+
+        var platform = _repository.GetPlatformForCompany(companyId, platformId);
+
+        if (platform == null)
+        {
+            return NotFound();
+        }
+
+        var platformReadDto = _mapper.Map<PlatformReadDto>(platform);
+
+        return Ok(platformReadDto);
     }
 
     [HttpPost]
-    public async Task<ActionResult<PlatformReadDto>> CreatePlatform(PlatformCreateDto platformCreateDto)
+    public async Task<ActionResult<PlatformReadDto>> CreatePlatformForCompany(int companyId, PlatformCreateDto platformCreateDto)
     {
-        Console.WriteLine("--> Creating new Platform...");
+        Console.WriteLine($"--> Hit CreatePlatformForCompany: {companyId}");
+
+        if (!_repository.CompanyExist(companyId))
+        {
+            return NotFound();
+        }
 
         var platform = _mapper.Map<Platform>(platformCreateDto);
 
-        _repository.CreatePlatform(platform);
+        _repository.CreatePlatform(companyId, platform);
         _repository.SaveChanges();
 
         var platformReadDto = _mapper.Map<PlatformReadDto>(platform);
 
         // Send Sync Message
-        try 
+        try
         {
             await _commandDataClient.SendPlatformToCommand(platformReadDto);
         }
@@ -88,7 +110,7 @@ public class PlatformsController : ControllerBase
             Console.WriteLine($"--> Could not send asynchronously: {ex.Message}");
         }
 
-        return CreatedAtRoute(nameof(GetPlatformById), new { Id = platformReadDto.Id}, platformReadDto);
+        return CreatedAtAction(nameof(CreatePlatformForCompany), new { companyId = companyId, platformId = platformReadDto.Id }, platformReadDto);
     }
 }
 

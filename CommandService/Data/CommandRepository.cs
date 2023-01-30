@@ -18,7 +18,7 @@ public class CommandRepository : ICommandRepository
             throw new ArgumentNullException(nameof(command));
         }
 
-        command.PlatformId= platformId;
+        command.PlatformId = platformId;
         _dbContext.Commands.Add(command);
     }
 
