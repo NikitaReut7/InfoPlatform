@@ -1,0 +1,17 @@
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
+WORKDIR /app
+
+COPY ./Info.Company.Contracts/*.csproj ./Info.Company.Contracts/
+COPY ./Info.Common/*.csproj ./Info.Common/
+COPY ./Info.Company.Service/*.csproj ./Info.Company.Service/
+
+RUN dotnet restore ./Info.Company.Service/Info.CompanyService.csproj 
+
+COPY . ./
+RUN dotnet publish -c Release -o /app/out  ./Info.Company.Service/Info.CompanyService.csproj
+
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
+WORKDIR /app
+COPY --from=build-env /app/out .
+ENTRYPOINT [ "dotnet","Info.CompanyService.dll" ]
+
