@@ -2,16 +2,17 @@ using MassTransit;
 using Info.PlatformService.Data;
 using Info.PlatformService.Models;
 using Info.CompanyContracts;
+using Info.PlatformService.Data.CompanyRepository;
 
 namespace Info.PlatformService.AsyncDataServices.Consumers
 {
     public class CompanyUpdatedConsumer : IConsumer<CompanyUpdated>
     {
-        private readonly IPlatformRepo repository;
+        private readonly ICompanyRepository _repository;
 
-        public CompanyUpdatedConsumer(IPlatformRepo repository)
+        public CompanyUpdatedConsumer(ICompanyRepository repository)
         {
-            this.repository = repository;
+            _repository = repository;
         }
 
         public async Task Consume(ConsumeContext<CompanyUpdated> context)
@@ -20,7 +21,7 @@ namespace Info.PlatformService.AsyncDataServices.Consumers
 
             var message = context.Message;
 
-            var item = repository.GetCompanyByExternalId(message.Id);
+            var item = _repository.Get(c => c.ExternalId == message.Id);
 
             if (item == null)
             {
@@ -29,9 +30,9 @@ namespace Info.PlatformService.AsyncDataServices.Consumers
 
             item.Name = message.Name;
 
-            repository.UpdateCompany(item);
+            _repository.Update(item);
 
-            repository.SaveChanges();
+            _repository.SaveChanges();
         }
     }
 }

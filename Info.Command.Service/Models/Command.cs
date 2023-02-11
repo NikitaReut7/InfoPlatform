@@ -1,11 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Info.Common.Repository;
+using System.ComponentModel.DataAnnotations;
 
 namespace Info.CommandService.Models;
-public class Command
+public class Command : EntityBase
 {
-    [Key]
-    [Required]
-    public int Id { get; set; }
 
     [Required]
     public string HowTo { get; set; }

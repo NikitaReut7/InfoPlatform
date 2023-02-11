@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
-using Info.CommandService.Data;
+using Info.CommandService.Data.CommandRepository;
+using Info.CommandService.Data.PlatformRepository;
 using Info.CommandService.DTOs;
 using Info.CommandService.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -10,12 +11,17 @@ namespace Info.CommandService.Controllers;
 [ApiController]
 public class CommandsController : ControllerBase
 {
-    private readonly ICommandRepository _repository;
+    private readonly ICommandRepository _commandRepository;
+    private readonly IPlatformRepository _platformRepository;
     private readonly IMapper _mapper;
 
-    public CommandsController(ICommandRepository repository, IMapper mapper)
+    public CommandsController(
+        ICommandRepository commandRepository,
+        IPlatformRepository platformRepository,
+        IMapper mapper)
     {
-        _repository = repository;
+        _commandRepository = commandRepository;
+        _platformRepository = platformRepository;
         _mapper = mapper;
     }
 
@@ -24,12 +30,12 @@ public class CommandsController : ControllerBase
     {
         Console.WriteLine($"--> Hit GetCommandsForPlatform:{platformId}");
 
-        if (!_repository.PlatformExistByExternalId(platformId))
+        if (!_platformRepository.EntityExist(c => c.ExternalId == platformId))
         {
             return NotFound();
         }
 
-        var commands = _repository.GetCommandsForPlatform(platformId);
+        var commands = _commandRepository.GetAll(c=>c.PlatformId == platformId);
 
         var commandsReadDtos = _mapper.Map<IEnumerable<CommandReadDto>>(commands);
 
@@ -41,12 +47,12 @@ public class CommandsController : ControllerBase
     {
         Console.WriteLine($"--> Hit GetCommandForPlatform: {platformId} / {commandId}");
 
-        if (!_repository.PlatformExistByExternalId(platformId))
+        if (!_platformRepository.EntityExist(c=>c.ExternalId == platformId))
         {
             return NotFound();
         }
 
-        var command = _repository.GetCommandForPlatform(platformId, commandId);
+        var command = _commandRepository.Get(c=>c.PlatformId == platformId && c.Id == commandId);
 
         if (command == null)
         {
@@ -63,15 +69,16 @@ public class CommandsController : ControllerBase
     {
         Console.WriteLine($"--> Hit CreateCommandForPlatform: {platformId}");
 
-        if (!_repository.PlatformExistByExternalId(platformId))
+        if (!_platformRepository.EntityExist(c=>c.ExternalId == platformId))
         {
             return NotFound();
         }
 
         var command = _mapper.Map<Command>(commandDto);
+        command.PlatformId = platformId;
 
-        _repository.CreateCommand(platformId, command);
-        _repository.SaveChanges();
+        _commandRepository.Create(command);
+        _commandRepository.SaveChanges();
 
         var commandReadDto = _mapper.Map<CommandReadDto>(command);
 
@@ -83,7 +90,7 @@ public class CommandsController : ControllerBase
     {
         Console.WriteLine($"--> Hit UpdateCommand: {commandId} for platform: {platformId}");
 
-        var command = _repository.GetCommandForPlatform(platformId, commandId);
+        var command = _commandRepository.Get(c => c.PlatformId == platformId && c.Id == commandId);
         if (command == null)
         {
             return NotFound();
@@ -92,8 +99,8 @@ public class CommandsController : ControllerBase
         command.HowTo = commandUpdateDto.HowTo;
         command.CommandLine = commandUpdateDto.CommandLine;
 
-        _repository.UpdateCommand(command);
-        _repository.SaveChanges();
+        _commandRepository.Update(command);
+        _commandRepository.SaveChanges();
 
         var commandReadDto = _mapper.Map<CommandReadDto>(command);
 
@@ -105,15 +112,15 @@ public class CommandsController : ControllerBase
     {
         Console.WriteLine($"--> Hit DeleteCommand: {commandId} for platform: {platformId}");
 
-        var command = _repository.GetCommandForPlatform(platformId, commandId);
+        var command = _commandRepository.Get(c => c.PlatformId == platformId && c.Id == commandId);
 
         if (command == null)
         {
             return NotFound();
         }
 
-        _repository.DeleteCommand(command);
-        _repository.SaveChanges();
+        _commandRepository.Remove(command);
+        _commandRepository.SaveChanges();
 
         return NoContent();
     }

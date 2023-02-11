@@ -2,7 +2,8 @@ using Info.CommandService.Data;
 using Info.CommandService.SyncDataServices.Grps;
 using Microsoft.EntityFrameworkCore;
 using Info.Common.MassTransit;
-
+using Info.CommandService.Data.CommandRepository;
+using Info.CommandService.Data.PlatformRepository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,7 @@ else
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+builder.Services.AddScoped<IPlatformRepository, PlatformRepository>();
 builder.Services.AddScoped<ICommandRepository, CommandRepository>();
 builder.Services.AddScoped<IPlatformDataClient, PlatformDataClient>();
 

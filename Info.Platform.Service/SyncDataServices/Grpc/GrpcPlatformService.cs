@@ -1,15 +1,15 @@
 using AutoMapper;
 using Grpc.Core;
-using Info.PlatformService.Data;
+using Info.PlatformService.Data.PlatformRepository;
 
 namespace Info.PlatformService.SyncDataServices.Grps;
 
 public class GrpcPlatformService : GrpcPlatform.GrpcPlatformBase
 {
-    private readonly IPlatformRepo _repository;
+    private readonly IPlatformRepository _repository;
     private readonly IMapper _mapper;
 
-    public GrpcPlatformService(IPlatformRepo repository, IMapper mapper) 
+    public GrpcPlatformService(IPlatformRepository repository, IMapper mapper) 
     {
         _repository = repository;
         _mapper = mapper;
@@ -18,7 +18,7 @@ public class GrpcPlatformService : GrpcPlatform.GrpcPlatformBase
     public override Task<PlatformResponse> GetAllPlatforms(GetAllRequest request, ServerCallContext context)
     {
         var response = new PlatformResponse();
-        var platforms = _repository.GetPlatforms();
+        var platforms = _repository.GetAll();
 
         foreach(var platform in platforms)
         {

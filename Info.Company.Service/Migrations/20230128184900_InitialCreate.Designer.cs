@@ -10,45 +10,45 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Info.CompanyService.Migrations
 {
-    [DbContext(typeof(AppDbContext))]
-    [Migration("20230128184900_InitialCreate")]
-    partial class InitialCreate
-    {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
-        {
+   [DbContext(typeof(AppDbContext))]
+   [Migration("20230128184900_InitialCreate")]
+   partial class InitialCreate
+   {
+       /// <inheritdoc />
+       protected override void BuildTargetModel(ModelBuilder modelBuilder)
+       {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.2")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+           modelBuilder
+               .HasAnnotation("ProductVersion", "7.0.2")
+               .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+           SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Info.CompanyService.Models.Company", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+           modelBuilder.Entity("Info.CompanyService.Models.Company", b =>
+               {
+                   b.Property<int>("Id")
+                       .ValueGeneratedOnAdd()
+                       .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                   SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("County")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                   b.Property<string>("County")
+                       .IsRequired()
+                       .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                   b.Property<string>("Description")
+                       .IsRequired()
+                       .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                   b.Property<string>("Name")
+                       .IsRequired()
+                       .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                   b.HasKey("Id");
 
-                    b.ToTable("Companies");
-                });
+                   b.ToTable("Companies");
+               });
 #pragma warning restore 612, 618
-        }
-    }
+       }
+   }
 }

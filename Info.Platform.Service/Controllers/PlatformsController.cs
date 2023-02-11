@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
-using Info.PlatformService.AsyncDataServices;
-using Info.PlatformService.Data;
 using Info.PlatformService.DTOs;
 using Info.PlatformService.Models;
 using Info.PlatformService.SyncDataServices.Http;
 using Info.PlatformContracts;
+using Info.PlatformService.Data.PlatformRepository;
+using Info.PlatformService.Data.CompanyRepository;
 
 namespace Info.PlatformService.Controllers;
 
@@ -14,19 +14,21 @@ namespace Info.PlatformService.Controllers;
 [ApiController]
 public class PlatformsController : ControllerBase
 {
-    private readonly IPlatformRepo _repository;
+    private readonly IPlatformRepository _platformRepository;
+    private readonly ICompanyRepository _companyRepository;
     private readonly IMapper _mapper;
     private readonly ICommandDataClient _commandDataClient;
-
     private readonly IPublishEndpoint _publishEndpoint;
 
     public PlatformsController(
-        IPlatformRepo repository,
+        IPlatformRepository platformRepository,
+        ICompanyRepository companyRepository,
         IMapper mapper,
         ICommandDataClient commandDataClient,
         IPublishEndpoint publishEndpoint)
     {
-        _repository = repository;
+        _platformRepository = platformRepository;
+        _companyRepository = companyRepository;
         _mapper = mapper;
         _commandDataClient = commandDataClient;
         _publishEndpoint = publishEndpoint;
@@ -39,12 +41,12 @@ public class PlatformsController : ControllerBase
     {
         Console.WriteLine($"--> Hit GetPlatformsForCompany:{companyId}");
 
-        if (!_repository.CompanyExist(companyId))
+        if (!_companyRepository.EntityExist(companyId))
         {
             return NotFound();
         }
 
-        var platforms = _repository.GetPlatformsForCompany(companyId);
+        var platforms = _platformRepository.GetAll(c => c.CompanyId == companyId);
 
         var platformsReadDtos = _mapper.Map<IEnumerable<PlatformReadDto>>(platforms);
 
@@ -56,12 +58,12 @@ public class PlatformsController : ControllerBase
     {
         Console.WriteLine($"--> Hit GetPlatformForCompany: {companyId} / {platformId}");
 
-        if (!_repository.CompanyExist(companyId))
+        if (!_companyRepository.EntityExist(companyId))
         {
             return NotFound();
         }
 
-        var platform = _repository.GetPlatformForCompany(companyId, platformId);
+        var platform = _platformRepository.Get(c => c.CompanyId == companyId && c.Id == platformId);
 
         if (platform == null)
         {
@@ -78,15 +80,16 @@ public class PlatformsController : ControllerBase
     {
         Console.WriteLine($"--> Hit CreatePlatformForCompany: {companyId}");
 
-        if (!_repository.CompanyExist(companyId))
+        if (!_companyRepository.EntityExist(companyId))
         {
             return NotFound();
         }
 
         var platform = _mapper.Map<Platform>(platformCreateDto);
+        platform.CompanyId = companyId;
 
-        _repository.CreatePlatform(companyId, platform);
-        _repository.SaveChanges();
+        _platformRepository.Create(platform);
+        _platformRepository.SaveChanges();
 
         var platformReadDto = _mapper.Map<PlatformReadDto>(platform);
 
@@ -119,7 +122,7 @@ public class PlatformsController : ControllerBase
     {
         Console.WriteLine($"--> Hit UpdatePlatform: {platformId} for company: {companyId}");
 
-        var platform = _repository.GetPlatformForCompany(companyId, platformId);
+        var platform = _platformRepository.Get(c => c.CompanyId == companyId && c.Id == platformId);
 
         if (platform == null)
         {
@@ -129,8 +132,8 @@ public class PlatformsController : ControllerBase
         platform.Name = platformUpdateDto.Name;
         platform.Cost = platformUpdateDto.Cost;
 
-        _repository.UpdatePlatform(platform);
-        _repository.SaveChanges();
+        _platformRepository.Update(platform);
+        _platformRepository.SaveChanges();
 
         var platformReadDto = _mapper.Map<PlatformReadDto>(platform);
 
@@ -154,7 +157,7 @@ public class PlatformsController : ControllerBase
     {
         Console.WriteLine($"--> Hit DeletePlatform: {platformId} for company: {companyId}");
 
-        var platform = _repository.GetPlatformForCompany(companyId, platformId);
+        var platform = _platformRepository.Get(c => c.CompanyId == companyId && c.Id == platformId);
 
         if (platform == null)
         {
@@ -163,8 +166,8 @@ public class PlatformsController : ControllerBase
 
         var platformReadDto = _mapper.Map<PlatformReadDto>(platform);
 
-        _repository.DeletePlatform(platform);
-        _repository.SaveChanges();
+        _platformRepository.Remove(platform);
+        _platformRepository.SaveChanges();
 
         // Send Async Message
         try

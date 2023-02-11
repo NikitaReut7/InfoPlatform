@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Info.CommandService.Models;
 using Info.CommandService.SyncDataServices.Grps;
+using Info.CommandService.Data.PlatformRepository;
 
 namespace Info.CommandService.Data;
 public static class PrepDb
@@ -15,7 +16,7 @@ public static class PrepDb
 
             SeedData(
                 serviceScoped.ServiceProvider.GetService<AppDbContext>(),
-                serviceScoped.ServiceProvider.GetService<ICommandRepository>(),
+                serviceScoped.ServiceProvider.GetService<IPlatformRepository>(),
                 platforms,
                 isProduction);
         }
@@ -23,7 +24,7 @@ public static class PrepDb
 
     private static void SeedData(
         AppDbContext context,
-        ICommandRepository repository,
+        IPlatformRepository repository,
         IEnumerable<Platform> platforms,
         bool isProduction)
     {
@@ -46,9 +47,9 @@ public static class PrepDb
 
             foreach (var platform in platforms)
             {
-                if (!repository.PlatformExistByExternalId(platform.ExternalId))
+                if (!repository.EntityExist(c=> c.ExternalId == platform.ExternalId))
                 {
-                    repository.CreatePlatform(platform);
+                    repository.Create(platform);
                     repository.SaveChanges();
 
                     Console.WriteLine("--> New platform added from GRPS Service!");

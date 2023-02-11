@@ -1,4 +1,5 @@
-using Info.CommandService.Data;
+using Info.CommandService.Data.CommandRepository;
+using Info.CommandService.Data.PlatformRepository;
 using Info.CommandService.Models;
 using Info.PlatformContracts;
 using MassTransit;
@@ -7,32 +8,33 @@ namespace Info.CommandService.AsyncDataServices.Consumers
 {
     public class PlatformCreatedConsumer : IConsumer<PlatformCreated>
     {
-        private readonly ICommandRepository repository;
+        private readonly IPlatformRepository _platformRepository;
 
-        public PlatformCreatedConsumer(ICommandRepository repository)
+
+        public PlatformCreatedConsumer(
+            IPlatformRepository platformRepository
+            )
         {
-            this.repository = repository;
+            _platformRepository = platformRepository;
         }
 
         public async Task Consume(ConsumeContext<PlatformCreated> context)
         {
             var message = context.Message;
 
-            var isExist = repository.PlatformExistByExternalId(message.Id);
+            var isExist = _platformRepository.EntityExist(c=>c.ExternalId == message.Id);
 
-            if (isExist)
+            if (!isExist)
             {
-                return;
+                var platform = new Platform()
+                {
+                    ExternalId = message.Id,
+                    Name = message.Name
+                };
+
+                _platformRepository.Create(platform);
+                _platformRepository.SaveChanges();
             }
-
-            var platform = new Platform()
-            {
-                ExternalId = message.Id,
-                Name = message.Name
-            };
-
-            repository.CreatePlatform(platform);
-            repository.SaveChanges();
         }
     }
 }

@@ -1,7 +1,11 @@
 using Info.Common.MassTransit;
 using Info.CompanyService.Data;
+using Info.CompanyService.Models;
 using Info.CompanyService.SyncDataServices.Http;
 using Microsoft.EntityFrameworkCore;
+using Info.Common;
+using Info.Common.Repository;
+using Info.CompanyService.Data.CompanyRepository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,10 +20,9 @@ if (builder.Environment.IsProduction())
 {
     Console.WriteLine("--> User SqlServer Db");
 
-    builder.Services.AddDbContext<AppDbContext>(opt =>
-        opt.UseSqlServer(builder.Configuration.GetConnectionString("CompaniesConn"))
-    );
-
+    builder.Services
+        .AddDbContext<AppDbContext>(opt =>
+        opt.UseSqlServer(builder.Configuration.GetConnectionString("CompaniesConn")));
 }
 else
 {
@@ -33,10 +36,12 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
 builder.Services.AddHttpClient<IPlatformDataClient, HttpPlatformDataClient>();
 
+
 builder.Services.AddMassTransitWithRabbitMq();
 
 
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

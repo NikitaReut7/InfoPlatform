@@ -1,13 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Info.Common.Repository;
 
 namespace Info.CompanyService.Models;
 
-public class Company
+[Table(name: "Companies")]
+public class Company : EntityBase
 {
-    [Key]
-    [Required]
-    public int Id { get; set; }
-
     [Required]
     public string Name { get; set; }
 

@@ -3,6 +3,8 @@ using Info.PlatformService.Data;
 using Info.PlatformService.SyncDataServices.Grps;
 using Info.PlatformService.SyncDataServices.Http;
 using Info.Common.MassTransit;
+using Info.PlatformService.Data.PlatformRepository;
+using Info.PlatformService.Data.CompanyRepository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,7 +34,9 @@ else
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-builder.Services.AddScoped<IPlatformRepo, PlatformRepo>();
+builder.Services.AddScoped<IPlatformRepository, PlatformRepository>();
+builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
+
 builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
 
 builder.Services.AddGrpc();

@@ -1,33 +1,29 @@
-using System.Threading.Tasks;
 using MassTransit;
-using Info.CommandService.Data;
-using Info.CompanyContracts;
 using Info.PlatformContracts;
+using Info.CommandService.Data.PlatformRepository;
 
 namespace Info.CommandService.AsyncDataServices.Consumers
 {
     public class PlatformDeletedConsumer : IConsumer<PlatformDeleted>
     {
-        private readonly ICommandRepository repository;
+        private readonly IPlatformRepository _platformRepository;
 
-        public PlatformDeletedConsumer(ICommandRepository repository)
+        public PlatformDeletedConsumer(IPlatformRepository platformRepository)
         {
-            this.repository = repository;
+            _platformRepository = platformRepository;
         }
 
         public async Task Consume(ConsumeContext<PlatformDeleted> context)
         {
             var message = context.Message;
 
-            var item = repository.GetPlatformByExternalId(message.Id);
+            var item = _platformRepository.Get(c => c.ExternalId == message.Id);
 
-            if (item == null)
+            if (item != null)
             {
-                return;
+                _platformRepository.Remove(item);
+                _platformRepository.SaveChanges();
             }
-
-            repository.DeletePlatform(item);
-            repository.SaveChanges();
         }
     }
 }

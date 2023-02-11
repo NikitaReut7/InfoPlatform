@@ -5,16 +5,17 @@ using Info.PlatformService.DTOs;
 using Info.PlatformService.Models;
 using Info.CompanyContracts;
 using MassTransit;
+using Info.PlatformService.Data.CompanyRepository;
 
 namespace Info.PlatformService.AsyncDataServices.Consumers
 {
     public class CompanyCreatedConsumer : IConsumer<CompanyCreated>
     {
-        private readonly IPlatformRepo repository;
+        private readonly ICompanyRepository _repository;
 
-        public CompanyCreatedConsumer(IPlatformRepo repository)
+        public CompanyCreatedConsumer(ICompanyRepository repository)
         {
-            this.repository = repository;
+            _repository = repository;
         }
 
         public async Task Consume(ConsumeContext<CompanyCreated> context)
@@ -22,21 +23,19 @@ namespace Info.PlatformService.AsyncDataServices.Consumers
             Console.WriteLine("Hit CompanyConsumer: creating company...");
             var message = context.Message;
 
-            var isExist = repository.ExternalCompanyExist(message.Id);
+            var isExist = _repository.EntityExist(c => c.ExternalId == message.Id);
 
-            if (isExist)
+            if (!isExist)
             {
-                return;
+                var company = new Company()
+                {
+                    ExternalId = message.Id,
+                    Name = message.Name
+                };
+
+                _repository.Create(company);
+                _repository.SaveChanges();
             }
-
-            var company = new Company()
-            {
-                ExternalId = message.Id,
-                Name = message.Name
-            };
-
-            repository.CreateCompany(company);
-            repository.SaveChanges();
         }
     }
 }

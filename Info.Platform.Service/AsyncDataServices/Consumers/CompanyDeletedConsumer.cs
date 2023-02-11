@@ -1,20 +1,27 @@
-using System.Threading.Tasks;
 using MassTransit;
-using Info.PlatformService.Data;
 using Info.CompanyContracts;
 using Info.PlatformContracts;
+using Info.PlatformService.Data.CompanyRepository;
+using Info.PlatformService.Data.PlatformRepository;
 
 namespace Info.PlatformService.AsyncDataServices.Consumers
 {
     public class CompanyDeletedConsumer : IConsumer<CompanyDeleted>
     {
-        private readonly IPlatformRepo repository;
+        private readonly ICompanyRepository _companyRepository;
+
+        private readonly IPlatformRepository _platformRepository;
+
         private readonly IPublishEndpoint _publishEndpoint;
 
 
-        public CompanyDeletedConsumer(IPlatformRepo repository, IPublishEndpoint publishEndpoint)
+        public CompanyDeletedConsumer(
+            ICompanyRepository companyRepository,
+            IPlatformRepository platformRepository,
+            IPublishEndpoint publishEndpoint)
         {
-            this.repository = repository;
+            _companyRepository = companyRepository;
+            _platformRepository = platformRepository;
             _publishEndpoint = publishEndpoint;
         }
 
@@ -25,22 +32,20 @@ namespace Info.PlatformService.AsyncDataServices.Consumers
 
             var message = context.Message;
 
-            var item = repository.GetCompanyByExternalId(message.Id);
+            var item = _companyRepository.Get(c => c.ExternalId == message.Id);
 
-            var platforms = repository.GetPlatformsForCompany(message.Id);
+            var platforms = _platformRepository.GetAll(c => c.CompanyId == message.Id);
 
-            if (item == null)
+            if (item != null)
             {
-                return;
-            }
+                foreach (var platform in platforms)
+                {
+                    await _publishEndpoint.Publish(new PlatformDeleted(platform.Id));
+                }
 
-            foreach (var platform in platforms)
-            {
-                await _publishEndpoint.Publish(new PlatformDeleted(platform.Id));
+                _companyRepository.Remove(item);
+                _companyRepository.SaveChanges();
             }
-
-            repository.DeleteCompany(item);
-            repository.SaveChanges();
         }
     }
 }

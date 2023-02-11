@@ -1,11 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Info.Common.Repository;
+using System.ComponentModel.DataAnnotations;
 
 namespace Info.CommandService.Models;
-public class Platform
+public class Platform : EntityBase
 {
-    [Key]
-    [Required]
-    public int Id { get; set; }
 
     [Required]
     public int ExternalId { get; set; }

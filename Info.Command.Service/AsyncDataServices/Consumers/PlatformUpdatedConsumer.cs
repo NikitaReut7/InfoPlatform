@@ -3,34 +3,33 @@ using Info.CommandService.Data;
 using Info.CommandService.Models;
 using Info.CompanyContracts;
 using Info.PlatformContracts;
+using Info.CommandService.Data.PlatformRepository;
 
 namespace Info.CommandService.AsyncDataServices.Consumers
 {
     public class PlatformUpdatedConsumer : IConsumer<PlatformUpdated>
     {
-        private readonly ICommandRepository repository;
+        private readonly IPlatformRepository _platformRepository;
 
-        public PlatformUpdatedConsumer(ICommandRepository repository)
+        public PlatformUpdatedConsumer(IPlatformRepository platformRepository)
         {
-            this.repository = repository;
+            _platformRepository = platformRepository;
         }
 
         public async Task Consume(ConsumeContext<PlatformUpdated> context)
         {
             var message = context.Message;
 
-            var item = repository.GetPlatformByExternalId(message.Id);
+            var item = _platformRepository.Get(c => c.ExternalId == message.Id);
 
-            if (item == null)
+            if (item != null)
             {
-                return;
+                item.Name = message.Name;
+
+                _platformRepository.Update(item);
+
+                _platformRepository.SaveChanges();
             }
-
-            item.Name = message.Name;
-
-            repository.UpdatePlatform(item);
-
-            repository.SaveChanges();
         }
     }
 }

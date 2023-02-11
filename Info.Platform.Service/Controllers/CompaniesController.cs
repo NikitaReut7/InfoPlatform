@@ -5,6 +5,7 @@ using Info.PlatformService.Data;
 using Info.PlatformService.DTOs;
 using Info.PlatformService.Models;
 using System.Text.Json;
+using Info.PlatformService.Data.CompanyRepository;
 
 namespace Info.PlatformService.Controllers
 {
@@ -12,10 +13,12 @@ namespace Info.PlatformService.Controllers
     [ApiController]
     public class CompaniesController : ControllerBase
     {
-        private readonly IPlatformRepo _repository;
+        private readonly ICompanyRepository _repository;
         private readonly IMapper _mapper;
 
-        public CompaniesController(IPlatformRepo repository, IMapper mapper)
+        public CompaniesController(
+            ICompanyRepository repository,
+            IMapper mapper)
         {
             _repository = repository;
             _mapper = mapper;
@@ -26,7 +29,7 @@ namespace Info.PlatformService.Controllers
         {
             Console.WriteLine("--> Getting Companies from Company Service");
 
-            var companies = _repository.GetCompanies();
+            var companies = _repository.GetAll();
 
             var companiesReadDtos = _mapper.Map<IEnumerable<CompanyReadDto>>(companies);
 
@@ -43,9 +46,9 @@ namespace Info.PlatformService.Controllers
                 var companyPublishedDto = JsonSerializer.Deserialize<CompanyPublishedDto>(obj.ToString());
                 var company = _mapper.Map<Company>(companyPublishedDto);
 
-                if (!_repository.ExternalCompanyExist(company.ExternalId))
+                if (!_repository.EntityExist(c => c.ExternalId == company.ExternalId))
                 {
-                    _repository.CreateCompany(company);
+                    _repository.Create(company);
                     _repository.SaveChanges();
                     Console.WriteLine("--> Company added!");
 

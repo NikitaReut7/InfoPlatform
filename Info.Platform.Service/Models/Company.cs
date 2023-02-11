@@ -1,13 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Info.Common.Repository;
 
 namespace Info.PlatformService.Models;
 
-public class Company
+public class Company : EntityBase
 {
-    [Key]
-    [Required]
-    public int Id { get; set; }
-
     [Required]
     public int ExternalId { get; set; }
 

@@ -29,7 +29,7 @@ public static class PrepDb
 
 		if(!context.Companies.Any())
 		{
-            Console.WriteLine("--> Seeding Data...");
+           Console.WriteLine("--> Seeding Data...");
 
 			context.Companies.AddRange(
 				new Company() { 
@@ -37,17 +37,17 @@ public static class PrepDb
 					County = "USA", 
 					Description = "American multinational technology corporation producing computer software, consumer electronics, personal computers, and related services" 
 				},
-                new Company() { 
+               new Company() { 
 					Name = "Google LLS", 
 					County = "USA", 
 					Description = "American multinational technology company focusing on search engine technology, online advertising, cloud computing, computer software, quantum computing, e-commerce, artificial intelligence,[9] and consumer electronics." 
 				}
-            );
+           );
 
 
 			context.SaveChanges();
-        }
-        else
+       }
+       else
 		{
 			Console.WriteLine("--> We already have data.");
 		}

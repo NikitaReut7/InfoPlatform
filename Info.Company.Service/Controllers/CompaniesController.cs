@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using MassTransit.Transports;
 using MassTransit;
 using Info.CompanyContracts;
+using Info.Common.Repository;
+using Info.CompanyService.Data.CompanyRepository;
 
 namespace Info.CompanyService.Controllers
 {
@@ -37,7 +39,7 @@ namespace Info.CompanyService.Controllers
         {
             Console.WriteLine("--> Getting Companies...");
 
-            var companies = _repository.GetCompanies();
+            var companies = _repository.GetAll();
 
             return Ok(_mapper.Map<IEnumerable<CompanyReadDto>>(companies));
         }
@@ -49,7 +51,7 @@ namespace Info.CompanyService.Controllers
 
             var company = _mapper.Map<Company>(companyCreateDto);
 
-            _repository.CreateCompany(company);
+            _repository.Create(company);
             _repository.SaveChanges();
 
             var companyReadDto = _mapper.Map<CompanyReadDto>(company);
@@ -85,7 +87,7 @@ namespace Info.CompanyService.Controllers
         {
             Console.WriteLine("--> Getting Company by id...");
 
-            var company = _repository.GetCompanyById(id);
+            var company = _repository.Get(id);
 
             if (company != null)
             {
@@ -100,7 +102,7 @@ namespace Info.CompanyService.Controllers
         {
             Console.WriteLine("--> Updating company...");
 
-            var company = _repository.GetCompanyById(id);
+            var company = _repository.Get(id);
 
             if (company == null)
             {
@@ -111,7 +113,7 @@ namespace Info.CompanyService.Controllers
             company.County = companyUpdateDto.County ?? company.County;
             company.Description = companyUpdateDto.Description ?? company.Description;
 
-            _repository.UpdateCompany(company);
+            _repository.Update(company);
             _repository.SaveChanges();
 
             var companyReadDto = _mapper.Map<CompanyUpdateDto>(company);
@@ -134,14 +136,14 @@ namespace Info.CompanyService.Controllers
         {
             Console.WriteLine("--> Deleting company...");
 
-            var company = _repository.GetCompanyById(id);
+            var company = _repository.Get(id);
 
             if (company != null)
             {
 
                 var companyReadDto = _mapper.Map<CompanyReadDto>(company);
 
-                _repository.DeteleCompany(company);
+                _repository.Remove(company);
                 _repository.SaveChanges();
 
                 try
